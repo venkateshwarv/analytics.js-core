@@ -13,6 +13,7 @@ var pageDefaults = require('../build/pageDefaults');
 var sinon = require('sinon');
 var tick = require('next-tick');
 var trigger = require('compat-trigger-event');
+var assign = require('lodash.assign');
 
 var Identify = Facade.Identify;
 var cookie = Analytics.cookie;
@@ -772,17 +773,6 @@ describe('Analytics', function() {
       );
       var page = analytics._invoke.args[0][1];
       assert.deepEqual(page.options('AdRoll'), { opt: true });
-    });
-
-    it('should use the initialize .integrations option', function() {
-      analytics.initialize(settings, {
-        integrations: {
-          Test: false
-        }
-      });
-      analytics.page({ prop: true });
-      var page = analytics._invoke.args[0][1];
-      assert.deepEqual(page.obj.integrations, { Test: false });
     });
 
     it('should be able to override the initialize .integrations option', function() {
@@ -1609,6 +1599,26 @@ describe('Analytics', function() {
       analytics.track('event');
       var track = analytics._invoke.args[0][1];
       assert.deepEqual(track.context(), { page: contextPage });
+    });
+
+    it('should support overwriting context.page fields', function() {
+      analytics.track(
+        'event',
+        {},
+        {
+          context: {
+            page: {
+              title: 'lol'
+            }
+          }
+        }
+      );
+
+      var track = analytics._invoke.args[0][1];
+      assert.deepEqual(
+        track.context().page,
+        assign(contextPage, { title: 'lol' })
+      );
     });
 
     it('should accept context.traits', function() {

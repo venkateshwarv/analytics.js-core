@@ -9,7 +9,6 @@ import { InitOptions } from './types';
 var clone = require('./utils/clone');
 var cookie = require('./cookie');
 var debug = require('debug')('analytics:entity');
-var defaults = require('@ndhoule/defaults');
 var extend = require('@ndhoule/extend');
 var memory = require('./memory');
 var store = require('./store');
@@ -74,7 +73,10 @@ Entity.prototype.storage = function() {
 
 Entity.prototype.options = function(options?: InitOptions) {
   if (arguments.length === 0) return this._options;
-  this._options = defaults(options || {}, this.defaults || {});
+  this._options = {
+    ...this.defaults,
+    ...options
+  }
 };
 
 /**

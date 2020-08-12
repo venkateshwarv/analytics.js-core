@@ -5,7 +5,8 @@ import {
   InitOptions,
   SegmentAnalytics,
   SegmentOpts,
-  SegmentIntegration
+  SegmentIntegration,
+  PageDefaults
 } from './types';
 
 var _analytics = global.analytics;
@@ -32,7 +33,6 @@ var extend = require('extend');
 var cookie = require('./cookie');
 var metrics = require('./metrics');
 var debug = require('debug');
-var defaults = require('@ndhoule/defaults');
 var each = require('./utils/each');
 var foldl = require('@ndhoule/foldl');
 var group = require('./group');
@@ -50,6 +50,7 @@ var querystring = require('component-querystring');
 var store = require('./store');
 var user = require('./user');
 var type = require('component-type');
+var assign = require('lodash.assign')
 
 /**
  * Initialize a new `Analytics` instance.
@@ -320,8 +321,13 @@ Analytics.prototype.identify = function(
   });
 
   // Add the initialize integrations so the server-side ones can be disabled too
+  // NOTE: We need to merge integrations, not override them with assign
+  // since it is possible to change the initialized integrations at runtime.
   if (this.options.integrations) {
-    defaults(msg.integrations, this.options.integrations);
+    msg.integrations = {
+      ...this.options.integrations,
+      ...msg.integrations
+    }
   }
 
   this._invoke('identify', new Identify(msg));
@@ -376,8 +382,13 @@ Analytics.prototype.group = function(
   });
 
   // Add the initialize integrations so the server-side ones can be disabled too
+  // NOTE: We need to merge integrations, not override them with assign
+  // since it is possible to change the initialized integrations at runtime.
   if (this.options.integrations) {
-    defaults(msg.integrations, this.options.integrations);
+    msg.integrations = {
+      ...this.options.integrations,
+      ...msg.integrations
+    }
   }
 
   this._invoke('group', new Group(msg));
@@ -441,10 +452,12 @@ Analytics.prototype.track = function(
   }
 
   // Add the initialize integrations so the server-side ones can be disabled too
-  defaults(
-    msg.integrations,
-    this._mergeInitializeAndPlanIntegrations(planIntegrationOptions)
-  );
+  // NOTE: We need to merge integrations, not override them with assign
+  // since it is possible to change the initialized integrations at runtime.
+  msg.integrations = {
+    ...this._mergeInitializeAndPlanIntegrations(planIntegrationOptions),
+    ...msg.integrations
+  }
 
   this._invoke('track', new Track(msg));
 
@@ -590,7 +603,7 @@ Analytics.prototype.page = function(
   // Ensure properties has baseline spec properties.
   // TODO: Eventually move these entirely to `options.context.page`
   var defs = pageDefaults();
-  defaults(properties, defs);
+  assign(properties, defs)
 
   // Mirror user overrides to `options.context.page` (but exclude custom properties)
   // (Any page defaults get applied in `this.normalize` for consistency.)
@@ -610,8 +623,13 @@ Analytics.prototype.page = function(
   });
 
   // Add the initialize integrations so the server-side ones can be disabled too
+  // NOTE: We need to merge integrations, not override them with assign
+  // since it is possible to change the initialized integrations at runtime.
   if (this.options.integrations) {
-    defaults(msg.integrations, this.options.integrations);
+    msg.integrations = {
+      ...this.options.integrations,
+      ...msg.integrations
+    }
   }
 
   this._invoke('page', new Page(msg));
@@ -663,8 +681,13 @@ Analytics.prototype.alias = function(
   });
 
   // Add the initialize integrations so the server-side ones can be disabled too
+  // NOTE: We need to merge integrations, not override them with assign
+  // since it is possible to change the initialized integrations at runtime.
   if (this.options.integrations) {
-    defaults(msg.integrations, this.options.integrations);
+    msg.integrations = {
+      ...this.options.integrations,
+      ...msg.integrations
+    }
   }
 
   this._invoke('alias', new Alias(msg));
@@ -958,7 +981,7 @@ Analytics.prototype._parseQuery = function(query: string): SegmentAnalytics {
  */
 
 Analytics.prototype.normalize = function(msg: {
-  context: { page };
+  context: { page: Partial<PageDefaults> };
   anonymousId: string;
 }): object {
   msg = normalize(msg, keys(this._integrations));
@@ -966,7 +989,10 @@ Analytics.prototype.normalize = function(msg: {
   msg.anonymousId = user.anonymousId();
 
   // Ensure all outgoing requests include page data in their contexts.
-  msg.context.page = defaults(msg.context.page || {}, pageDefaults());
+  msg.context.page = {
+    ...pageDefaults(),
+    ...msg.context.page
+  };
 
   return msg;
 };
