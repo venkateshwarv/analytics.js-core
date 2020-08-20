@@ -1,3 +1,8 @@
+# 4.0.2 / 2020-08-24
+
+- Drop the beta release
+- Replace @ndhoule/defaults with lodash.assign and ES6 spread syntax
+
 # 4.0.1 / 2020-08-21
 
 - Minor version bump since previous version was published incorrectly. No code change.
