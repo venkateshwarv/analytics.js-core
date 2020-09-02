@@ -1,3 +1,10 @@
+# 4.0.3 / 2020-09-02
+
+- Replaces `utils/clone` with `lodash.deepclone`
+- Replaces `utils/map` with `Array.prototype.map`
+- Replaces `utils/each` with `Array.prototype.each`
+- Removes the `utils` directory and tests
+
 # 4.0.2 / 2020-09-01
 
 - Replace @ndhoule/foldl with Array.prototype.reduce
